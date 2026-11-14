@@ -12,10 +12,19 @@ import timerRoutes from './modules/timer/timer.routes.js';
 
 const app = express();
 
+// Necesario en Render / proxies inversos para que express-rate-limit lea bien la IP real
+app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(
   cors({
-    origin: env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      // Permite clientes móviles nativos (sin cabecera Origin) y el frontend web autorizado
+      if (!origin || origin === env.FRONTEND_URL || env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   })
 );
